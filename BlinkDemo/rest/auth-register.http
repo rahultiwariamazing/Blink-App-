@@ -1,0 +1,223 @@
+##############################################
+# ENV + DEFAULT HEADERS
+##############################################
+# Keep both base URLs for testing
+# @baseUrl = http://localhost:5261
+@baseUrl = https://rahul007007tiwari.bsite.net/
+
+@contentType = application/json
+@token = REPLACE_JWT_IF_NEEDED
+
+@timestamp = {{$randomInt 10000 99999}}
+
+##############################################
+# AUTH
+# - login → sets {{token}} automatically
+# - register → may return tokens (auto-login supported by app)
+# - refresh → used by apiClient (token rotation)
+##############################################
+
+### LOGIN (dev helper) → auto set {{token}}
+# @name logintoken
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+
+{
+  "mobile": "9898989898",
+  "password": "testtest"
+}
+
+
+### REGISTER (may return tokens; otherwise just 'created: true')
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+
+{
+  "name": "John Doe",
+  "email": "john.doe+{{timestamp}}@example.com",
+  "mobile": "98{{timestamp}}",
+  "password": "testtest"
+}
+
+### REFRESH (used internally by apiClient)
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+
+{
+  "refreshToken": "REPLACE_REFRESH_TOKEN"
+}
+
+
+##############################################
+# BOOTSTRAP / ME
+# - initial snapshot (e.g., cart) after login
+##############################################
+
+### GET BOOTSTRAP
+GET {{baseUrl}}/api/me/bootstrap
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+
+##############################################
+# CATALOG
+# - categories
+# - subcategories
+# - products (with optional categoryId)
+# - search
+##############################################
+
+### GET CATEGORIES
+GET {{baseUrl}}/api/catalog/categories
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+### GET SUBCATEGORIES (by categoryId)
+GET {{baseUrl}}/api/catalog/subcategories?categoryId=REPLACE_CATEGORY_ID
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+### GET ALL PRODUCTS
+GET {{baseUrl}}/api/catalog/products
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+### GET PRODUCTS (filtered by categoryId)
+GET {{baseUrl}}/api/catalog/products?categoryId=REPLACE_CATEGORY_ID
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+### SEARCH PRODUCTS (q = name/description)
+GET {{baseUrl}}/api/catalog/search?q=milk
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+
+##############################################
+# CART
+# - get cart
+# - upsert item (+1, -1 or setQty)
+# - delete item
+# - clear cart
+##############################################
+
+### GET CART
+GET {{baseUrl}}/api/cart
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+### UPSERT CART ITEM (quantity = +1 / -1 / {n})
+POST {{baseUrl}}/api/cart/upsert
+Content-Type: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+{
+  "productId": "REPLACE_PRODUCT_ID",
+  "quantity": 1
+}
+
+### DELETE CART ITEM
+DELETE {{baseUrl}}/api/cart/REPLACE_PRODUCT_ID
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+### CLEAR CART
+POST {{baseUrl}}/api/cart/clear
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+Content-Type: {{contentType}}
+
+{}
+
+
+##############################################
+# ORDERS
+# - place order
+# - list orders
+# - get order by id
+##############################################
+
+### PLACE ORDER
+POST {{baseUrl}}/api/orders/place
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+{
+  "AddressId": "REPLACE_ADDRESS_ID"
+}
+
+### LIST ORDERS
+GET {{baseUrl}}/api/orders
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+### GET ORDER BY ID
+GET {{baseUrl}}/api/orders/REPLACE_ORDER_ID
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+
+##############################################
+# ADDRESSES
+# - list
+# - create
+# - update
+# - delete
+# - set default
+#
+# Notes
+# - FE mapAddress() expects camelCase in app, but API uses PascalCase.
+# - Upsert:
+#     • POST /api/addresses        (create)
+#     • PUT  /api/addresses/{id}   (update)
+# - Default selection = Selected in UI (one-and-only-one).
+##############################################
+
+### LIST ADDRESSES (current user)
+GET {{baseUrl}}/api/addresses
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+### CREATE ADDRESS (POST)
+POST {{baseUrl}}/api/addresses
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+{
+  "Label": "Home",
+  "AddressLine": "Flat 101, Sunshine Apt",
+  "Pincode": "400001",
+  "City": "Mumbai",
+  "Lat": 19.076,
+  "Lng": 72.8777,
+  "IsDefault": false
+}
+
+### UPDATE ADDRESS (PUT)
+PUT {{baseUrl}}/api/addresses/REPLACE_ADDRESS_ID
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+{
+  "Label": "Home",
+  "AddressLine": "Updated Address line",
+  "Pincode": "400001",
+  "City": "Mumbai",
+  "Lat": 19.076,
+  "Lng": 72.8777,
+  "IsDefault": false
+}
+
+### DELETE ADDRESS
+DELETE {{baseUrl}}/api/addresses/REPLACE_ADDRESS_ID
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
+
+### SET DEFAULT ADDRESS
+POST {{baseUrl}}/api/addresses/REPLACE_ADDRESS_ID/set-default
+Accept: {{contentType}}
+Authorization: Bearer {{logintoken.response.body.Data.AccessToken}}
