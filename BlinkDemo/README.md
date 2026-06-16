@@ -63,6 +63,11 @@ API and storage keys are configured in:
 
 - src/services/config.ts
 
+For AI product insights (Groq), add these variables to your Expo env:
+
+- EXPO_PUBLIC_GROQ_API_KEY=your_groq_key
+- EXPO_PUBLIC_GROQ_MODEL=llama-3.3-70b-versatile
+
 Current API base URL is set in code for demo usage. For production, move this to environment-specific configuration.
 
 ## Engineering Notes

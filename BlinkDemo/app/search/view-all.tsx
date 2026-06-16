@@ -75,7 +75,7 @@
 // - Safe to paste and run. Production-safe.
 // ============================================================================
 
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -98,12 +98,18 @@ import { createCommon } from "../../src/theme/common";
 import { txt } from "../../src/components/common/CommonText";
 import CommonButton from "../../src/components/common/CommonButton";
 import CommonCounter from "../../src/components/common/CommonCounter";
+import { Loader } from "../../src/components/Loader";
 
 // Cart & Redux
 import CartBadge from "../../src/components/CartBadge";
 import { useCartActions } from "../../src/hooks/useCartActions";
 import { useAppSelector } from "../../src/store/hooks";
 import { selectCartItems } from "../../src/store/slices/cartSlice";
+import {
+  canUseAiInsight,
+  getProductInsight,
+  type ProductInsight,
+} from "../../src/services/aiInsightService";
 
 // -----------------------------------------------------------------------------
 // SAFE PARSE UTILITY
@@ -123,7 +129,7 @@ export default function ViewAll() {
   const params = useLocalSearchParams<{ id?: string; data?: string }>();
 
   // Parse the product data safely
-  const item = safeParse(params.data);
+  const item = useMemo(() => safeParse(params.data), [params.data]);
 
   // Theme system
   const { colors, mode } = useTheme();
@@ -133,6 +139,10 @@ export default function ViewAll() {
   // Cart logic (clean architecture)
   const { addItem, removeItem } = useCartActions();
   const cartItems = useAppSelector(selectCartItems);
+  const [insight, setInsight] = useState<ProductInsight | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const lastAutoLoadedItemIdRef = useRef<string | null>(null);
 
   // Current product quantity in cart
   const qty = useMemo(
@@ -144,12 +154,16 @@ export default function ViewAll() {
   // LIFECYCLE / PARAM LOGS
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    console.log("[ItemDetail] mounted with params:", { id: params.id, hasData: !!params.data });
-    console.log("[ItemDetail] parsed item:", item ? { id: item.id, name: item.name } : null);
+    console.log("[ItemDetail] mounted");
     return () => {
       console.log("[ItemDetail] unmounted");
     };
-  }, [params.id, params.data, item]);
+  }, []);
+
+  useEffect(() => {
+    console.log("[ItemDetail] params:", { id: params.id, hasData: !!params.data });
+    console.log("[ItemDetail] parsed item:", item ? { id: item.id, name: item.name } : null);
+  }, [params.id, params.data, item?.id, item?.name]);
 
   useEffect(() => {
     if (item) {
@@ -180,6 +194,53 @@ export default function ViewAll() {
     console.log("[ItemDetail] onMinus()", { id: item.id });
     removeItem(item.id);
   }, [item, removeItem]);
+
+  const loadInsight = useCallback(async () => {
+    if (!item) return;
+
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      const data = await getProductInsight(item);
+      setInsight(data);
+    } catch (e: any) {
+      setAiError(e?.message ?? "Could not generate insight right now.");
+      setInsight(null);
+    } finally {
+      setAiLoading(false);
+    }
+  }, [item]);
+
+  useEffect(() => {
+    if (!item) return;
+    if (!canUseAiInsight()) {
+      setAiLoading(false);
+      setInsight(null);
+      setAiError("AI key missing. Add EXPO_PUBLIC_GROQ_API_KEY in env.");
+      return;
+    }
+
+    if (lastAutoLoadedItemIdRef.current === item.id) {
+      return;
+    }
+
+    lastAutoLoadedItemIdRef.current = item.id;
+    loadInsight();
+  }, [item?.id, loadInsight, item]);
+
+  const verdictMeta = useMemo(() => {
+    if (!insight) {
+      return { label: "Pending", color: colors.muted, bg: colors.card };
+    }
+    if (insight.verdict === "must_buy") {
+      return { label: "Must Buy", color: "#0f5132", bg: "#d1fae5" };
+    }
+    if (insight.verdict === "skip") {
+      return { label: "Skip", color: "#7f1d1d", bg: "#fee2e2" };
+    }
+    return { label: "Consider", color: "#854d0e", bg: "#fef3c7" };
+  }, [insight, colors.muted, colors.card]);
 
   // ===========================================================================
   // UI RENDER
@@ -239,8 +300,14 @@ export default function ViewAll() {
                 <Text style={[txt.h2, s.price]}>₹{item.price}</Text>
               </View>
 
-              {/* Space below title */}
-              <View style={{ height: spacing.xl }} />
+              <View style={s.priceStrip}>
+                <Text style={s.priceStripLabel}>Smart Buy Signal</Text>
+                <View style={[s.verdictPill, { backgroundColor: verdictMeta.bg }]}>
+                  <Text style={[s.verdictText, { color: verdictMeta.color }]}>
+                    {verdictMeta.label}
+                  </Text>
+                </View>
+              </View>
 
               {/* Quantity controls */}
               <View style={[s.rowBetween, { marginTop: spacing.sm }]}>
@@ -251,6 +318,60 @@ export default function ViewAll() {
                 ) : (
                   <CommonCounter qty={qty} onMinus={onMinus} onPlus={onAdd} />
                 )}
+              </View>
+
+              <View style={s.aiCard}>
+                <View style={s.aiHeaderRow}>
+                  <Text style={s.aiTitle}>AI Product Insight</Text>
+                  <TouchableOpacity
+                    style={s.aiRefreshBtn}
+                    onPress={loadInsight}
+                    disabled={aiLoading || !item}
+                  >
+                    <Text style={s.aiRefreshText}>{aiLoading ? "Loading" : "Refresh"}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {aiLoading ? (
+                  <View style={s.aiLoadingWrap}>
+                    <Loader />
+                    <Text style={s.aiMuted}>Analyzing product quality and health fit...</Text>
+                  </View>
+                ) : aiError ? (
+                  <View style={s.aiErrorWrap}>
+                    <Text style={s.aiErrorText}>{aiError}</Text>
+                  </View>
+                ) : insight ? (
+                  <>
+                    <Text style={s.aiSummary}>{insight.summary}</Text>
+
+                    <Text style={s.aiSectionTitle}>Health View</Text>
+                    <Text style={s.aiBody}>{insight.health}</Text>
+
+                    <Text style={s.aiSectionTitle}>Pros</Text>
+                    {insight.pros.length === 0 ? (
+                      <Text style={s.aiMuted}>No strong pros available.</Text>
+                    ) : (
+                      insight.pros.map((p, idx) => (
+                        <Text key={`pro-${idx}`} style={s.aiBullet}>{`+ ${p}`}</Text>
+                      ))
+                    )}
+
+                    <Text style={s.aiSectionTitle}>Cons</Text>
+                    {insight.cons.length === 0 ? (
+                      <Text style={s.aiMuted}>No strong cons available.</Text>
+                    ) : (
+                      insight.cons.map((c, idx) => (
+                        <Text key={`con-${idx}`} style={s.aiBullet}>{`- ${c}`}</Text>
+                      ))
+                    )}
+
+                    <View style={s.aiFooterRow}>
+                      <Text style={s.aiConfidence}>{`Confidence: ${Math.round(insight.confidence)}%`}</Text>
+                    </View>
+                    <Text style={s.aiDisclaimer}>{insight.disclaimer}</Text>
+                  </>
+                ) : null}
               </View>
 
               {/* About Section */}
@@ -337,7 +458,7 @@ const makeStyles = (colors: any, mode: "light" | "dark") =>
       width: "100%",
       height: 260,
       borderRadius: 12,
-      backgroundColor: mode === "dark" ? colors.surfaceAlt : "#eee",
+      backgroundColor: mode === "dark" ? "#0f172a" : "#eee",
       marginBottom: spacing.lg,
     },
 
@@ -357,5 +478,132 @@ const makeStyles = (colors: any, mode: "light" | "dark") =>
     price: {
       fontWeight: "900",
       color: colors.text,
+    },
+    priceStrip: {
+      marginBottom: spacing.md,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: spacing.sm,
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: colors.border,
+    },
+    priceStripLabel: {
+      color: colors.muted,
+      fontSize: 12,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+    },
+    verdictPill: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: 999,
+    },
+    verdictText: {
+      fontSize: 12,
+      fontWeight: "800",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    aiCard: {
+      marginTop: spacing.xl,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.bg,
+      borderRadius: 14,
+      padding: spacing.md,
+      gap: spacing.xs,
+    },
+    aiHeaderRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: spacing.xs,
+    },
+    aiTitle: {
+      fontSize: 16,
+      fontWeight: "800",
+      color: colors.text,
+    },
+    aiRefreshBtn: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.card,
+    },
+    aiRefreshText: {
+      color: colors.text,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    aiLoadingWrap: {
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+      alignItems: "flex-start",
+    },
+    aiErrorWrap: {
+      backgroundColor: mode === "dark" ? "#3f1d1d" : "#fee2e2",
+      borderRadius: 10,
+      padding: spacing.sm,
+      marginTop: spacing.xs,
+    },
+    aiErrorText: {
+      color: mode === "dark" ? "#fecaca" : "#991b1b",
+      fontSize: 12,
+      fontWeight: "600",
+      lineHeight: 18,
+    },
+    aiSummary: {
+      color: colors.text,
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: "600",
+      marginBottom: spacing.sm,
+    },
+    aiSectionTitle: {
+      marginTop: spacing.sm,
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: "800",
+      textTransform: "uppercase",
+      letterSpacing: 0.6,
+    },
+    aiBody: {
+      color: colors.text,
+      fontSize: 13,
+      lineHeight: 20,
+      marginTop: spacing.xs,
+    },
+    aiBullet: {
+      marginTop: spacing.xs,
+      color: colors.text,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    aiMuted: {
+      color: colors.muted,
+      fontSize: 12,
+      lineHeight: 18,
+    },
+    aiFooterRow: {
+      marginTop: spacing.md,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    aiConfidence: {
+      color: colors.text,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    aiDisclaimer: {
+      marginTop: spacing.xs,
+      color: colors.muted,
+      fontSize: 11,
+      lineHeight: 16,
     },
   });
