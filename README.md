@@ -1,95 +1,449 @@
-# BlinkDemo
+# 🛒 BlinkDemo
 
-BlinkDemo is an Expo Router + React Native TypeScript demo app with authentication, catalog browsing, cart management, address handling, and order tracking.
+A modern React Native + Expo Router mobile commerce application demonstrating a complete shopping journey from authentication to order placement.
 
-## Tech Stack
+BlinkDemo showcases production-style mobile architecture using Expo Router, TypeScript, Redux Toolkit, service-layer abstraction, address management, order tracking, and AI-powered product insights.
 
+---
+
+## 📖 Overview
+
+BlinkDemo is a frontend mobile application built to integrate with the BlinkDemoApi backend.
+
+The application provides:
+
+- Secure Authentication
+- Product Discovery
+- Category Navigation
+- Product Search
+- AI Product Insights
+- Cart Management
+- Address Management
+- Checkout Flow
+- Order Tracking
+- Theme Switching
+
+The project follows scalable mobile application architecture patterns suitable for enterprise-grade applications.
+
+---
+
+## ✨ Features
+
+### 🔐 Authentication
+
+- Login
+- Signup
+- Session Management
+- Auto Authentication Routing
+- Token Refresh Support
+
+### 🏬 Product Discovery
+
+- Categories
+- Subcategories
+- Product Listing
+- Product Search
+- Product Details
+
+### 🤖 AI Product Insights
+
+- Product Analysis
+- Pros & Cons
+- Health Insights
+- Purchase Recommendations
+- Confidence Score
+
+Powered through Groq AI integration.
+
+### 🛒 Cart Management
+
+- Add to Cart
+- Remove from Cart
+- Quantity Updates
+- Cart Badge
+- Cart Persistence
+
+### 📍 Address Management
+
+- Address CRUD
+- Set Default Address
+- Map Location Selection
+- GPS Location Support
+
+### 📦 Order Management
+
+- Place Orders
+- Order History
+- Order Details
+- Status Tracking
+
+### 🎨 Theming
+
+- Light Mode
+- Dark Mode
+- Theme Persistence
+
+### 🔔 User Experience
+
+- Global Toast Notifications
+- Loading States
+- Optimistic Updates
+- Responsive Navigation
+
+---
+
+## 📱 User Flow
+
+```text
+App Launch
+↓
+Authentication
+↓
+Home
+↓
+Browse Products
+↓
+Product Details
+↓
+Add To Cart
+↓
+Select Address
+↓
+Place Order
+↓
+Order History
+↓
+Order Details
+```
+
+---
+
+## 🏗️ Architecture
+
+### Application Architecture
+
+```text
+Presentation Layer
+(Screens & Components)
+            ↓
+Hooks & ViewModels
+            ↓
+Redux State Layer
+            ↓
+Services Layer
+            ↓
+BlinkDemoApi Backend
+```
+
+### State Management
+
+```text
+Redux Toolkit
+├── authSlice
+├── cartSlice
+└── deliverySlice
+```
+
+### Persistence
+
+```text
+Redux Persist
+↓
+AsyncStorage
+```
+
+---
+
+## 📂 Project Structure
+
+```text
+app/
+├── (auth)/
+├── (tabs)/
+├── orders/
+├── profile/
+├── search/
+└── address/
+
+src/
+├── components/
+├── hooks/
+├── models/
+├── services/
+├── store/
+├── theme/
+├── utils/
+└── viewmodels/
+
+assets/
+doc/
+rest/
+```
+
+---
+
+## 🚦 Routing
+
+### Authentication
+
+```text
+/login
+/signup
+```
+
+### Main Application
+
+```text
+/home
+/search
+/cart
+/orders
+/profile
+```
+
+### Additional Routes
+
+```text
+/orders/:orderId
+/profile/addresses
+/profile/address-form
+/search/view-all
+```
+
+Implemented using:
+
+```text
+Expo Router
+```
+
+---
+
+## 🔄 State Management
+
+### authSlice
+
+Handles:
+
+- Login
+- Logout
+- Session
+- User Information
+- Token Management
+
+### cartSlice
+
+Handles:
+
+- Cart Items
+- Quantity Changes
+- Cart Totals
+- Cart Synchronization
+
+### deliverySlice
+
+Handles:
+
+- Selected Address
+- Delivery Preferences
+
+---
+
+## 🌐 Backend Integration
+
+Backend Repository:
+
+```text
+BlinkDemoApi
+```
+
+Integrated Modules:
+
+### Authentication
+
+```text
+POST /api/auth/login
+POST /api/auth/register
+POST /api/auth/refresh
+```
+
+### Catalog
+
+```text
+GET /api/catalog/categories
+GET /api/catalog/subcategories
+GET /api/catalog/products
+GET /api/catalog/search
+```
+
+### Cart
+
+```text
+GET /api/cart
+POST /api/cart/upsert
+DELETE /api/cart/{productId}
+POST /api/cart/clear
+```
+
+### Orders
+
+```text
+POST /api/orders/place
+GET /api/orders
+GET /api/orders/{id}
+```
+
+### Addresses
+
+```text
+GET
+POST
+PUT
+DELETE
+```
+
+through:
+
+```text
+/api/addresses
+```
+
+---
+
+## 🤖 AI Integration
+
+### AI Product Insights
+
+Implemented in:
+
+```text
+src/services/aiInsightService.ts
+```
+
+Capabilities:
+
+- Product Summary
+- Pros
+- Cons
+- Health Analysis
+- Verdict Generation
+- Confidence Estimation
+
+The feature is enabled when a Groq API key is configured.
+
+---
+
+## 🎨 Theme System
+
+Theme implementation:
+
+```text
+src/theme/
+├── colors.ts
+├── spacing.ts
+├── common.ts
+└── ThemeContext.tsx
+```
+
+Supported Modes:
+
+- Light Theme
+- Dark Theme
+
+Theme preference is persisted using AsyncStorage.
+
+---
+
+## 🛠 Technology Stack
+
+### Mobile
+
+- React Native
 - Expo SDK 54
-- React Native 0.81
-- Expo Router (file-based routing)
-- Redux Toolkit + redux-persist
-- AsyncStorage
+- Expo Router
 - TypeScript
 
-## Features
+### State Management
 
-- Authentication flow (login, signup, logout)
-- Protected navigation with auth-aware route gate
-- Product catalog and search
-- Cart with optimistic updates
-- Address management and default address selection
-- Order creation and order history/details
-- Theme support via app theme context
-- Global toast notifications
+- Redux Toolkit
+- React Redux
+- Redux Persist
 
-## Project Structure
+### Forms & Validation
 
-- app/: route screens and navigation layouts
-- src/components/: reusable UI building blocks
-- src/hooks/: reusable app logic hooks
-- src/models/: shared model and type definitions
-- src/services/: API and storage infrastructure
-- src/store/: Redux store and slices
-- src/theme/: theme tokens and context
-- src/viewmodels/: screen-oriented state orchestration
+- React Hook Form
+- Yup
 
-## Getting Started
+### Storage
 
-1. Install dependencies:
+- AsyncStorage
 
-npm install
+### Maps & Location
 
-2. Start Expo:
+- React Native Maps
+- Expo Location
 
-npm run start
+### AI
 
-3. Launch target platform:
+- Groq API
 
-- npm run android
-- npm run ios
-- npm run web
+---
 
-## Scripts
+## 📚 Documentation
 
-- npm run start: start Metro/Expo
-- npm run android: open Android target
-- npm run ios: open iOS target
-- npm run web: run web target
-- npm run typecheck: run TypeScript type checks
+Detailed documentation is available in:
 
-## Configuration
+```text
+doc/PROJECT_DETAILS.md
+```
 
-API and storage keys are configured in:
+The document covers:
 
-- src/services/config.ts
+- Architecture
+- Routing
+- Components
+- Redux Store
+- Services
+- API Integration
+- Security Review
+- Future Roadmap
+- Change Impact Analysis
 
-For AI product insights (Groq), add these variables to your Expo env:
+---
 
-- EXPO_PUBLIC_GROQ_API_KEY=your_groq_key
-- EXPO_PUBLIC_GROQ_MODEL=llama-3.3-70b-versatile
+## 🚧 Known Improvements
 
-Current API base URL is set in code for demo usage. For production, move this to environment-specific configuration.
+Planned enhancements:
 
-## Engineering Notes
+- Secure Token Storage
+- Unit Testing
+- Integration Testing
+- Better Error Recovery
+- Production Logging Strategy
+- AI Configuration Improvements
 
-Recent cleanup focused on making core infrastructure and state code production-ready:
+---
 
-- Removed verbose tutorial-style comments and development console logging
-- Kept only concise comments where implementation intent is non-obvious
-- Preserved existing behavior and public APIs
-- Improved readability in core files:
-  - app/_layout.tsx
-  - src/services/apiClient.ts
-  - src/services/authApi.ts
-  - src/services/tokenStorage.ts
-  - src/store/store.ts
-  - src/store/hooks.ts
-  - src/store/slices/authSlice.ts
-  - src/store/slices/cartSlice.ts
-  - src/hooks/useLoginViewModel.ts
-  - src/hooks/useCartActions.ts
-  - src/components/common/CommonButton.tsx
+## 👨‍💻 Developer
 
-## Next Professionalization Pass (Optional)
+**Rahul Tiwari**
 
-A broader sweep can remove remaining debug logs and verbose comments in route screens and some service/viewmodel files while keeping behavior identical.
+Mobile Architect | Full Stack Developer | AI Enthusiast
+
+Expertise:
+
+- .NET
+- MAUI
+- React Native
+- Azure
+- Firebase
+- AI Integration
+
+---
+
+## 📄 License
+
+Copyright © 2026 Rahul Tiwari
+
+All Rights Reserved.
+
+Unauthorized use, modification, distribution, reproduction, or commercial usage is prohibited without prior written permission.
