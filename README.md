@@ -1,14 +1,14 @@
-# 🛒 BlinkDemo
+# 🛒 QuickKart
 
 A modern React Native + Expo Router mobile commerce application demonstrating a complete shopping journey from authentication to order placement.
 
-BlinkDemo showcases production-style mobile architecture using Expo Router, TypeScript, Redux Toolkit, service-layer abstraction, address management, order tracking, and AI-powered product insights.
+QuickKart showcases production-style mobile commerce architecture using Expo Router, TypeScript, Redux Toolkit, service-layer abstraction, address management, order tracking, and AI-powered product insights.
 
 ---
 
 ## 📖 Overview
 
-BlinkDemo is a frontend mobile application built to integrate with the BlinkDemoApi backend.
+QuickKart is a frontend mobile commerce application built to integrate with the QuickKartApi backend.
 
 The application provides:
 
@@ -77,7 +77,7 @@ Powered through Groq AI integration.
 - Order Details
 - Status Tracking
 
-### 🎨 Theming
+### 🎨 Theme System
 
 - Light Mode
 - Dark Mode
@@ -132,7 +132,7 @@ Redux State Layer
             ↓
 Services Layer
             ↓
-BlinkDemoApi Backend
+QuickKartApi Backend
 ```
 
 ### State Management
@@ -253,7 +253,7 @@ Handles:
 Backend Repository:
 
 ```text
-BlinkDemoApi
+QuickKartApi
 ```
 
 Integrated Modules:
@@ -384,7 +384,7 @@ Theme preference is persisted using AsyncStorage.
 
 ### AI
 
-- Groq API
+- Groq AI
 
 ---
 
@@ -410,16 +410,17 @@ The document covers:
 
 ---
 
-## 🚧 Known Improvements
-
-Planned enhancements:
+## 🚧 Planned Enhancements
 
 - Secure Token Storage
 - Unit Testing
 - Integration Testing
-- Better Error Recovery
+- Enhanced Error Recovery
 - Production Logging Strategy
 - AI Configuration Improvements
+- Push Notifications
+- Analytics Dashboard
+- Offline Support
 
 ---
 
@@ -427,16 +428,13 @@ Planned enhancements:
 
 **Rahul Tiwari**
 
-Mobile Architect | Full Stack Developer | AI Enthusiast
+Mobile Application Architect | Full Stack Developer | AI Enthusiast
 
-Expertise:
+### Technology Expertise
 
-- .NET
-- MAUI
-- React Native
-- Azure
-- Firebase
-- AI Integration
+```text
+.NET • ASP.NET Core • MAUI • React Native • Flutter • Azure • Firebase • AI
+```
 
 ---
 
@@ -446,4 +444,4 @@ Copyright © 2026 Rahul Tiwari
 
 All Rights Reserved.
 
-Unauthorized use, modification, distribution, reproduction, or commercial usage is prohibited without prior written permission.
+Unauthorized use, modification, distribution, reproduction, or commercial usage is prohibited without prior written permission from the copyright holder.
